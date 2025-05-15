@@ -2,12 +2,14 @@ package com.chatop.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Setter;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @Entity
-@Table(name = "USERS")
+@Table(name = "users")
 public class Users {
 
 	@Id

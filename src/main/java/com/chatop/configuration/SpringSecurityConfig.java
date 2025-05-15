@@ -1,8 +1,12 @@
 package com.chatop.configuration;
 
 
+import java.util.ArrayList;
+import java.util.List;
+
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +25,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.chatop.model.Users;
+import com.chatop.repository.UsersRepository;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 @Configuration
@@ -35,6 +41,8 @@ public class SpringSecurityConfig {
     @Value("${jwt.secret}")
     private String jwtKey;
     
+    @Autowired
+    private UsersRepository userRepository;
 	
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,9 +70,19 @@ public class SpringSecurityConfig {
 
 	@Bean
 	public UserDetailsService users() {
-		UserDetails user = User.builder().username("user").password(passwordEncoder().encode("password")).roles("USER")
-				.build();
-		return new InMemoryUserDetailsManager(user);
+		Iterable<Users> users = userRepository.findAll();
+		List<UserDetails> usersList = new ArrayList<>();
+		for(Users user: users)
+		{
+			System.out.println(user.getName() + " " + user.getPassword()+"|");
+			usersList.add(User.builder()
+					.username(user.getName())
+					.password(user.getPassword())
+					.roles("USER")
+					.build());
+			
+		}
+		return new InMemoryUserDetailsManager(usersList);
 	}
 
 	@Bean
