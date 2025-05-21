@@ -10,12 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -69,89 +72,23 @@ public class SpringSecurityConfig {
 	}
 
 	@Bean
-	public UserDetailsService users() {
-		Iterable<Users> users = userRepository.findAll();
-		List<UserDetails> usersList = new ArrayList<>();
-		for(Users user: users)
-		{
-			System.out.println(user.getName() + " " + user.getPassword()+"|");
-			usersList.add(User.builder()
-					.username(user.getName())
-					.password(user.getPassword())
-					.roles("USER")
-					.build());
-			
-		}
-		return new InMemoryUserDetailsManager(usersList);
+	public UserDetailsService userDetailsService() {
+	    return username -> {
+	        Users user = userRepository.findByEmail(username)
+	            .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+	        return User.withUsername(user.getEmail())
+	                .password(user.getPassword())
+	                .roles("USER")
+	                .build();
+	    };
 	}
 
 	@Bean
 	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+	    return config.getAuthenticationManager();
+	}
 }
-
-//import com.openclassrooms.chatop.service.CustomUserDetailsService;
-//import org.springframework.context.annotation.Bean;
-//import org.springframework.context.annotation.Configuration;
-//import org.springframework.security.authentication.AuthenticationManager;
-//import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-//import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-//import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-//import org.springframework.security.config.http.SessionCreationPolicy;
-//import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-//import org.springframework.security.crypto.password.PasswordEncoder;
-//import org.springframework.security.web.SecurityFilterChain;
-//import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-//
-//
-//@Configuration
-//@EnableWebSecurity
-//public class SecurityConfig  {
-//
-//    private final CustomUserDetailsService userDetailsService;
-//    private final JwtAuthorizationFilter jwtAuthorizationFilter;
-//
-//    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtAuthorizationFilter jwtAuthorizationFilter) {
-//        this.userDetailsService = customUserDetailsService;
-//        this.jwtAuthorizationFilter = jwtAuthorizationFilter;
-//    }
-//
-//    @Bean
-//    public AuthenticationManager authenticationManager(HttpSecurity http, PasswordEncoder PasswordEncoder)
-//            throws Exception {
-//        AuthenticationManagerBuilder authenticationManagerBuilder = http.getSharedObject(AuthenticationManagerBuilder.class);
-//        authenticationManagerBuilder.userDetailsService(userDetailsService).passwordEncoder(PasswordEncoder);
-//        return authenticationManagerBuilder.build();
-//    }
-//
-//
-//    private static final String[] WHITELIST = {
-//            "/api/auth/login",
-//            "/api/auth/register",
-//            "/api/api-docs/**",
-//            "/api/swagger-ui/**"
-//    };
-//
-//    @Bean
-//    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-//
-//        http.csrf().disable()
-//                .authorizeRequests()
-//                .requestMatchers(WHITELIST).permitAll()
-//                .anyRequest().authenticated()
-//                .and().sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-//                .and().addFilterBefore(jwtAuthorizationFilter,UsernamePasswordAuthenticationFilter.class);
-//
-//
-//        return http.build();
-//    }
-//
-//
-//    @Bean
-//    public static PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-//
-//    }

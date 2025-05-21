@@ -1,6 +1,8 @@
 package com.chatop.controllers;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,15 +11,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.chatop.dto.LoginRequestDTO;
 import com.chatop.dto.UsersDTO;
-import com.chatop.model.Users;
 import com.chatop.service.JWTService;
 import com.chatop.service.UsersService;
-
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-
-
 
 
 
@@ -30,6 +27,8 @@ public class AuthController {
 	private UsersService usersService;
 	@Autowired
 	private BCryptPasswordEncoder passwordEncoder;
+	@Autowired
+	private AuthenticationManager authenticationManager;
 	
 	public AuthController(JWTService jwtService) {
 		this.jwtService = jwtService;
@@ -42,9 +41,11 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public String login(Authentication authentication) {
-    	String token = jwtService.generateToken(authentication);
-		return token;
+    public String login(@RequestBody LoginRequestDTO request) {
+        Authentication auth = authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(request.email, request.password)
+        );
+        return jwtService.generateToken(auth);
     }
 
     @GetMapping("/me")

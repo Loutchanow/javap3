@@ -18,6 +18,7 @@ public class UsersService {
 		Users users = new Users();
     	users.setName(usersDTO.getName());
     	users.setPassword(usersDTO.getPassword());
+    	users.setEmail(usersDTO.getEmail());
 		userRepository.save(users);
 		return usersDTO;
 	}
