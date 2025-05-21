@@ -34,11 +34,22 @@ public class AuthController {
 		this.jwtService = jwtService;
 	}
 
-    @PostMapping("/register")
-    public UsersDTO register(@RequestBody UsersDTO usersDTO) {
-    	usersDTO.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
-    	return usersService.save(usersDTO);
-    }
+//    @PostMapping("/register")
+//    public UsersDTO register(@RequestBody UsersDTO usersDTO) {
+//    	usersDTO.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
+//    	return usersService.save(usersDTO);
+//    }
+	@PostMapping("/register")
+	public String register(@RequestBody UsersDTO usersDTO) {
+	    String rawPassword = usersDTO.getPassword();
+	    usersDTO.setPassword(passwordEncoder.encode(rawPassword));
+	    usersService.save(usersDTO);
+	    Authentication authentication = authenticationManager.authenticate(
+	        new UsernamePasswordAuthenticationToken(usersDTO.getEmail(), rawPassword)
+	    );
+	    return jwtService.generateToken(authentication);
+	}
+
 
     @PostMapping("/login")
     public String login(@RequestBody LoginRequestDTO request) {
