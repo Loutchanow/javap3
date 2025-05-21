@@ -12,7 +12,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.chatop.dto.LoginRequestDTO;
+import com.chatop.dto.TokenResponseDTO;
 import com.chatop.dto.UsersDTO;
+import com.chatop.model.Users;
+import com.chatop.repository.UsersRepository;
 import com.chatop.service.JWTService;
 import com.chatop.service.UsersService;
 
@@ -34,34 +37,43 @@ public class AuthController {
 		this.jwtService = jwtService;
 	}
 
-//    @PostMapping("/register")
-//    public UsersDTO register(@RequestBody UsersDTO usersDTO) {
-//    	usersDTO.setPassword(passwordEncoder.encode(usersDTO.getPassword()));
-//    	return usersService.save(usersDTO);
-//    }
 	@PostMapping("/register")
-	public String register(@RequestBody UsersDTO usersDTO) {
+	public TokenResponseDTO register(@RequestBody UsersDTO usersDTO) {
 	    String rawPassword = usersDTO.getPassword();
 	    usersDTO.setPassword(passwordEncoder.encode(rawPassword));
 	    usersService.save(usersDTO);
 	    Authentication authentication = authenticationManager.authenticate(
 	        new UsernamePasswordAuthenticationToken(usersDTO.getEmail(), rawPassword)
 	    );
-	    return jwtService.generateToken(authentication);
+	    String token = jwtService.generateToken(authentication);
+	    return new TokenResponseDTO(token);
 	}
 
-
     @PostMapping("/login")
-    public String login(@RequestBody LoginRequestDTO request) {
+    public TokenResponseDTO login(@RequestBody LoginRequestDTO request) {
         Authentication auth = authenticationManager.authenticate(
             new UsernamePasswordAuthenticationToken(request.email, request.password)
         );
-        return jwtService.generateToken(auth);
+        String token = jwtService.generateToken(auth);
+        return new TokenResponseDTO(token);
     }
 
+    @Autowired
+    private UsersRepository usersRepository;
+
     @GetMapping("/me")
-    public String me() {
-        return "Me endpoint";
+    public UsersDTO me(Authentication authentication) {
+        String email = authentication.getName(); 
+        Users user = usersRepository.findByEmail(email).orElseThrow();
+        
+        UsersDTO dto = new UsersDTO();
+        dto.setId(user.getId());
+        dto.setName(user.getName());
+        dto.setEmail(user.getEmail());
+        dto.setCreated_at(user.getCreated_at());
+        dto.setUpdated_at(user.getUpdated_at());
+        
+        return dto;
     }
 }
 
