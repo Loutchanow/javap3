@@ -39,6 +39,9 @@ public class SpringSecurityConfig {
     private static final String[] PUBLIC = {
           "/api/auth/login",
           "/api/auth/register",
+          "/v3/api-docs/**",
+          "/swagger-ui.html",
+          "/swagger-ui/**"
   };
 
     @Value("${jwt.secret}")

@@ -7,10 +7,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 @RestController
 @RequestMapping("/api/rentals")
+@SecurityRequirement(name = "bearerAuth")
 public class RentalsController {
 
+	
     @GetMapping
     public String getAll() {
         return "Get all rentals endpoint";

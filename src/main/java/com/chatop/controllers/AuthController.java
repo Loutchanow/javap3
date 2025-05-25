@@ -19,6 +19,8 @@ import com.chatop.repository.UsersRepository;
 import com.chatop.service.JWTService;
 import com.chatop.service.UsersService;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+
 
 
 @RestController
@@ -62,6 +64,7 @@ public class AuthController {
     private UsersRepository usersRepository;
 
     @GetMapping("/me")
+    @SecurityRequirement(name = "bearerAuth")
     public UsersDTO me(Authentication authentication) {
         String email = authentication.getName(); 
         Users user = usersRepository.findByEmail(email).orElseThrow();
