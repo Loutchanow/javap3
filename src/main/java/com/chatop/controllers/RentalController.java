@@ -1,6 +1,7 @@
 package com.chatop.controllers;
 
 import com.chatop.dto.RentalDTO;
+import com.chatop.dto.RentalResponseDTO;
 import com.chatop.model.Rentals;
 import com.chatop.service.RentalService;
 import org.springframework.http.HttpStatus;
@@ -9,6 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.util.Map;
+import java.util.HashMap;
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -22,37 +26,32 @@ public class RentalController {
     }
 
     @GetMapping
-    public List<Rentals> getAllRentals() {
-        return rentalService.getAllRentals();
+    public ResponseEntity<Map<String, List<RentalResponseDTO>>> getAllRentals() {
+        List<RentalResponseDTO> rentals = rentalService.getAllRentals();
+        Map<String, List<RentalResponseDTO>> response = new HashMap<>();
+        response.put("rentals", rentals);
+        return ResponseEntity.ok(response);
     }
 
+
     @GetMapping("/{id}")
-    public ResponseEntity<Rentals> getRental(@PathVariable Long id) {
-        return rentalService.getRentalById(id)
-                .map(ResponseEntity::ok)
+    public ResponseEntity<RentalResponseDTO> getRental(@PathVariable Long id) {
+        return rentalService.getRentalByIdDTO(id)
+                .map(dto -> ResponseEntity.ok(dto))
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    @PostMapping("/{userId}")
-    public ResponseEntity<Rentals> createRental(
-            @PathVariable Long userId,
-            @RequestParam("name") String name,
-            @RequestParam("surface") BigDecimal surface,
-            @RequestParam("price") BigDecimal price,
-            @RequestParam("description") String description,
-            @RequestParam(value = "picture", required = false) MultipartFile picture
+
+    @PostMapping("/")
+    public ResponseEntity<Map<String, String>> createRental(
+            @ModelAttribute RentalDTO rentalDTO, Principal principal
     ) {
-        RentalDTO dto = new RentalDTO();
-        dto.setName(name);
-        dto.setSurface(surface);
-        dto.setPrice(price);
-        dto.setDescription(description);
-        String pictureUrl = picture != null ? picture.getOriginalFilename() : ""; 
-        Rentals created = rentalService.createRental(userId, dto, pictureUrl);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                             .body(rentalService.createRental(principal, rentalDTO));
     }
+    
     @PutMapping("/{id}")
-    public ResponseEntity<Rentals> updateRental(
+    public ResponseEntity<Map<String, String>> updateRental(
             @PathVariable Long id,
             @RequestParam("name") String name,
             @RequestParam("surface") BigDecimal surface,
@@ -66,47 +65,13 @@ public class RentalController {
         dto.setPrice(price);
         dto.setDescription(description);
 
-        Rentals updatedRental = rentalService.updateRental(id, dto);
+        rentalService.updateRental(id, dto);
 
-        return ResponseEntity.ok(updatedRental);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Rental updated !");
+        return ResponseEntity.ok(response);
     }
+
 }
+    
 
-
-//package com.chatop.controllers;
-//
-//import org.springframework.web.bind.annotation.GetMapping;
-//import org.springframework.web.bind.annotation.PostMapping;
-//import org.springframework.web.bind.annotation.PutMapping;
-//import org.springframework.web.bind.annotation.PathVariable;
-//import org.springframework.web.bind.annotation.RequestMapping;
-//import org.springframework.web.bind.annotation.RestController;
-//
-//import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-//
-//@RestController
-//@RequestMapping("/api/rentals")
-//@SecurityRequirement(name = "bearerAuth")
-//public class RentalController {
-//
-//	
-//    @GetMapping
-//    public String getAll() {
-//        return "Get all rentals endpoint";
-//    }
-//
-//    @GetMapping("/{id}")
-//    public String getOne(@PathVariable Long id) {
-//        return "Get rental with ID: " + id;
-//    }
-//
-//    @PostMapping
-//    public String create() {
-//        return "Create rental endpoint";
-//    }
-//
-//    @PutMapping("/{id}")
-//    public String update(@PathVariable Long id) {
-//        return "Update rental with ID: " + id;
-//    }
-//}

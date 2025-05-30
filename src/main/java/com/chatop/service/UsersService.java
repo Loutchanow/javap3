@@ -1,10 +1,12 @@
 package com.chatop.service;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.chatop.dto.UserResponseDTO;
 import com.chatop.dto.UsersDTO;
 import com.chatop.model.Users;
 import com.chatop.repository.UsersRepository;
@@ -35,4 +37,16 @@ public class UsersService {
 
 		return response;
 	}
+    public Optional<UserResponseDTO> getUserByIdDTO(Long id) {
+        return userRepository.findById(id)
+            .map(user -> {
+                UserResponseDTO dto = new UserResponseDTO();
+                dto.setId(user.getId());
+                dto.setName(user.getName());
+                dto.setEmail(user.getEmail());
+                dto.setCreated_at(user.getCreated_at());  
+                dto.setUpdated_at(user.getUpdated_at());
+                return dto;
+            });
+    }
 }
