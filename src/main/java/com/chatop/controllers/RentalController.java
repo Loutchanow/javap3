@@ -41,13 +41,15 @@ public class RentalController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
-
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<Map<String, String>> createRental(
-            @ModelAttribute RentalDTO rentalDTO, Principal principal
-    ) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                             .body(rentalService.createRental(principal, rentalDTO));
+            @ModelAttribute RentalDTO rentalDTO,
+            @RequestParam("picture") MultipartFile file,
+            Principal principal
+    ){
+    	return ResponseEntity.status(HttpStatus.CREATED)
+                .body(rentalService.createRental(principal, rentalDTO, file));
+
     }
     
     @PutMapping("/{id}")

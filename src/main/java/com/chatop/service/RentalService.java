@@ -10,8 +10,11 @@ import com.chatop.repository.UsersRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
+import org.apache.commons.net.ftp.FTPClient;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -19,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.springframework.web.multipart.MultipartFile;
+import org.apache.commons.net.ftp.FTP;
 
 @Service
 public class RentalService {
@@ -66,7 +71,8 @@ public class RentalService {
     }
 
     
-    public Map<String, String> createRental(Principal principal, RentalDTO dto) {
+    public Map<String, String> createRental(Principal principal, RentalDTO dto, MultipartFile file){
+
         Users owner = usersRepository
         	.findByEmail(principal.getName())
             .orElseThrow(() -> new RuntimeException("User not found"));
@@ -76,7 +82,35 @@ public class RentalService {
         rental.setPrice(dto.getPrice());
         rental.setDescription(dto.getDescription());
         rental.setOwner(owner);
-        rental.setPicture("https://fastly.picsum.photos/id/237/200/300.jpg?hmac=TmmQSbShHz9CdQm0NkEjx1Dyh_Y984R9LpNrpvH2D_U");
+        if (file != null && !file.isEmpty()) {
+            FTPClient ftpClient = new FTPClient();
+            try {
+                ftpClient.connect("localhost");
+                ftpClient.login("ftpuser", "1234"); 
+                ftpClient.enterLocalPassiveMode();
+                ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+
+                String filename = file.getOriginalFilename();
+                String remotePath = "/ftp/uploads/" + filename;
+
+                try (InputStream inputStream = file.getInputStream()) {
+                    boolean uploaded = ftpClient.storeFile(remotePath, inputStream);
+                    ftpClient.logout();
+                    ftpClient.disconnect();
+
+                    if (uploaded) {
+                        rental.setPicture("ftp://localhost/ftp/uploads/" + filename);
+                    } else {
+                        throw new RuntimeException("Échec de l'upload FTP");
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Erreur FTP: " + e.getMessage(), e);
+            }
+        } else {
+            rental.setPicture(null);
+        }
+
         rental.setCreated_at(LocalDateTime.now());
         rental.setUpdated_at(LocalDateTime.now());
 
