@@ -36,6 +36,11 @@ public class RentalService {
         this.usersRepository = usersRepository;
     }
 
+    private String computeFinalUrl(String path)
+    {
+    	return "/api/images/file/" + path;
+    }
+    
 
     public List<RentalResponseDTO> getAllRentals() {
         return rentalsRepository.findAll().stream().map(rental -> {
@@ -44,7 +49,7 @@ public class RentalService {
             dto.setName(rental.getName());
             dto.setSurface(rental.getSurface());
             dto.setPrice(rental.getPrice());
-            dto.setPicture(rental.getPicture());
+            dto.setPicture(computeFinalUrl(rental.getPicture()));
             dto.setDescription(rental.getDescription());
             dto.setOwner_id(rental.getOwner().getId());
             dto.setCreated_at(rental.getCreated_at().toString());
@@ -61,7 +66,7 @@ public class RentalService {
                 dto.setName(rental.getName());
                 dto.setSurface(rental.getSurface());
                 dto.setPrice(rental.getPrice());
-                dto.setPicture(rental.getPicture());
+                dto.setPicture(computeFinalUrl(rental.getPicture()));
                 dto.setDescription(rental.getDescription());
                 dto.setOwner_id(rental.getOwner().getId());
                 dto.setCreated_at(rental.getCreated_at().toString());
@@ -99,7 +104,7 @@ public class RentalService {
                     ftpClient.disconnect();
 
                     if (uploaded) {
-                        rental.setPicture("ftp://localhost/ftp/uploads/" + filename);
+                        rental.setPicture(filename);
                     } else {
                         throw new RuntimeException("Échec de l'upload FTP");
                     }

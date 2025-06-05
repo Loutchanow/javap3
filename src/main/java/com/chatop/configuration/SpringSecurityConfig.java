@@ -41,7 +41,9 @@ public class SpringSecurityConfig {
           "/api/auth/register",
           "/v3/api-docs/**",
           "/swagger-ui.html",
-          "/swagger-ui/**"
+          "/swagger-ui/**" ,
+          "/api/images/**"
+          
   };
 
     @Value("${jwt.secret}")
